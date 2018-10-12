@@ -14,13 +14,13 @@
 #include "programs/flipsnake.h"
 #include "programs/flipsettingbacklight.h"
 
-#define WIFI_RETRY_COUNT 10
+#define WIFI_RETRY_COUNT 10000
 
 FlipScreen* sign;
 ScreenProgramManager* screenManager;
 
-char* ssid     = "hal9k";
-char* password = "";
+char* ssid     = "FBI_Security Van #48";
+char* password = "Minecraft";
 
 // const char* ssid     = "FCM";
 // const char* password = "jsok815ogisk2200";
@@ -68,7 +68,7 @@ void setupWifi() {
       delay(500);
       Serial.print(".");
   }
-  
+
   startWiFiServices();
 }
 
@@ -102,7 +102,7 @@ void loop() {
   char* input = NULL;
   {
     wl_status_t status = WiFi.status();
-    if(status != WL_CONNECTED && 
+    if(status != WL_CONNECTED &&
        status != WL_IDLE_STATUS) {
 
       /*wait until ESP32 connect to WiFi*/
@@ -112,19 +112,19 @@ void loop() {
 
       int retries = WIFI_RETRY_COUNT;
       while ((status = WiFi.status()) != WL_CONNECTED && retries-- > 0) {
-          Serial.println(status);
+        Serial.println(status);
           delay(500);
           Serial.print(".");
       }
 
       // if still not connected
-      if(status != WL_CONNECTED && 
+      if(status != WL_CONNECTED &&
          status != WL_IDLE_STATUS) {
         configureWiFi();
       }
 
       stopWiFiServices();
-      configureWiFi();      
+      configureWiFi();
     }
   }
 

@@ -2,6 +2,7 @@
 #define __FLIPSCREEN__
 
 #include <Arduino.h>
+#include <Wire.h>
 
 // const int rowPins[5] = {13,12,14,27,26};
 // const int columnPins[5] = {15,2,4,16,17};
@@ -28,13 +29,16 @@ class FlipScreen {
 
     unsigned char screenState[PANEL_WIDTH][PANEL_HEIGHT] PROGMEM;
     unsigned char screenBuffer[PANEL_WIDTH][PANEL_HEIGHT] PROGMEM;
-    const unsigned char panel_triggers[4] = {5,18,19,21};
-    const unsigned char row_addr_pins[5] =  {13,23,14,27,26};
-    // const unsigned char row_addr_pins[5] =  {13,12,14,27,26};
-    const unsigned char col_addr_pins[5] =  {15,22,4,16,17};
-    // const unsigned char col_addr_pins[5] =  {15,2,4,16,17};
-    const unsigned char color_pin = 25;
+    const unsigned char panel_triggers[4] = {1,13,0,14};
+    const unsigned char row_addr_pins[5] =  {7,6,8,9,5};
+    const unsigned char col_addr_pins[5] =  {4,10,3,11,2};
+    // const unsigned char panel_triggers[4] = {6,9,7,8};
+    // const unsigned char row_addr_pins[5] =  {0,1,14,13,2};
+    // const unsigned char col_addr_pins[5] =  {3,12,4,11,5};
+    const unsigned char color_pin = 12;
     const unsigned char backlight_pin = 33;
+    unsigned char PORTA_EXTENDER = 0b00000000;
+    unsigned char PORTB_EXTENDER = 0b00000000;
 
     int index_to_bitpattern(int index);
     void _digitalWrite(unsigned char pin, unsigned char state);
@@ -57,7 +61,7 @@ class FlipScreen {
 // fonts - https://github.com/powerline/fonts/tree/master/Terminus/BDF
 // const unsigned short font[1][18] = { // each char is 10 wide
 const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
-{0x0000, // [0] - uni25AE 
+{0x0000, // [0] - uni25AE
  0x0000,
  0x0000,
  0x7F80,
@@ -75,7 +79,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [1] - blackdiamond 
+{0x0000, // [1] - blackdiamond
  0x0000,
  0x0000,
  0x0000,
@@ -93,7 +97,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0xAA80, // [2] - shade 
+{0xAA80, // [2] - shade
  0x5540,
  0xAA80,
  0x5540,
@@ -111,7 +115,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x5540,
  0xAA80,
  0x5540},
-{0x0000, // [3] - uni2409 
+{0x0000, // [3] - uni2409
  0x0000,
  0xCC00,
  0xCC00,
@@ -129,7 +133,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [4] - uni240C 
+{0x0000, // [4] - uni240C
  0x0000,
  0xFC00,
  0xC000,
@@ -147,7 +151,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [5] - uni240D 
+{0x0000, // [5] - uni240D
  0x0000,
  0x7800,
  0xCC00,
@@ -165,7 +169,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [6] - uni240A 
+{0x0000, // [6] - uni240A
  0x0000,
  0xC000,
  0xC000,
@@ -183,7 +187,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [7] - degree 
+{0x0000, // [7] - degree
  0x1E00,
  0x3300,
  0x3300,
@@ -201,7 +205,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [8] - plusminus 
+{0x0000, // [8] - plusminus
  0x0000,
  0x0000,
  0x0000,
@@ -219,7 +223,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [9] - uni2424 
+{0x0000, // [9] - uni2424
  0x0000,
  0xCC00,
  0xEC00,
@@ -237,7 +241,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [10] - uni240B 
+{0x0000, // [10] - uni240B
  0x0000,
  0xCC00,
  0xCC00,
@@ -255,7 +259,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0600,
  0x0000,
  0x0000},
-{0x0C00, // [11] - SF040000 
+{0x0C00, // [11] - SF040000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -273,7 +277,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [12] - SF030000 
+{0x0000, // [12] - SF030000
  0x0000,
  0x0000,
  0x0000,
@@ -291,7 +295,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0x0000, // [13] - SF010000 
+{0x0000, // [13] - SF010000
  0x0000,
  0x0000,
  0x0000,
@@ -309,7 +313,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0x0C00, // [14] - SF020000 
+{0x0C00, // [14] - SF020000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -327,7 +331,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0C00, // [15] - SF050000 
+{0x0C00, // [15] - SF050000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -345,7 +349,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0xFFC0, // [16] - uni23BA 
+{0xFFC0, // [16] - uni23BA
  0xFFC0,
  0x0000,
  0x0000,
@@ -363,7 +367,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [17] - uni23BB 
+{0x0000, // [17] - uni23BB
  0x0000,
  0x0000,
  0x0000,
@@ -381,7 +385,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [18] - SF100000 
+{0x0000, // [18] - SF100000
  0x0000,
  0x0000,
  0x0000,
@@ -399,7 +403,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [19] - uni23BC 
+{0x0000, // [19] - uni23BC
  0x0000,
  0x0000,
  0x0000,
@@ -417,7 +421,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [20] - uni23BD 
+{0x0000, // [20] - uni23BD
  0x0000,
  0x0000,
  0x0000,
@@ -435,7 +439,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0xFFC0,
  0xFFC0},
-{0x0C00, // [21] - SF080000 
+{0x0C00, // [21] - SF080000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -453,7 +457,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0x0C00, // [22] - SF090000 
+{0x0C00, // [22] - SF090000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -471,7 +475,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0x0C00, // [23] - SF070000 
+{0x0C00, // [23] - SF070000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -489,7 +493,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [24] - SF060000 
+{0x0000, // [24] - SF060000
  0x0000,
  0x0000,
  0x0000,
@@ -507,7 +511,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0x0C00, // [25] - SF110000 
+{0x0C00, // [25] - SF110000
  0x0C00,
  0x0C00,
  0x0C00,
@@ -525,7 +529,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0C00},
-{0x0000, // [26] - lessequal 
+{0x0000, // [26] - lessequal
  0x0000,
  0x0000,
  0x0300,
@@ -543,7 +547,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [27] - greaterequal 
+{0x0000, // [27] - greaterequal
  0x0000,
  0x0000,
  0x3000,
@@ -561,7 +565,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [28] - pi 
+{0x0000, // [28] - pi
  0x0000,
  0x0000,
  0x0000,
@@ -579,7 +583,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [29] - notequal 
+{0x0000, // [29] - notequal
  0x0000,
  0x0000,
  0x0000,
@@ -597,7 +601,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [30] - sterling 
+{0x0000, // [30] - sterling
  0x0000,
  0x0000,
  0x1E00,
@@ -615,7 +619,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [31] - periodcentered 
+{0x0000, // [31] - periodcentered
  0x0000,
  0x0000,
  0x0000,
@@ -633,7 +637,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [32] - space 
+{0x0000, // [32] - space
  0x0000,
  0x0000,
  0x0000,
@@ -651,7 +655,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [33] - exclam 
+{0x0000, // [33] - exclam
  0x0000,
  0x0000,
  0x0C00,
@@ -669,7 +673,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [34] - quotedbl 
+{0x0000, // [34] - quotedbl
  0x3300,
  0x3300,
  0x3300,
@@ -687,7 +691,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [35] - numbersign 
+{0x0000, // [35] - numbersign
  0x0000,
  0x0000,
  0x3300,
@@ -705,7 +709,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [36] - dollar 
+{0x0000, // [36] - dollar
  0x0000,
  0x0C00,
  0x0C00,
@@ -723,7 +727,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0C00,
  0x0C00,
  0x0000},
-{0x0000, // [37] - percent 
+{0x0000, // [37] - percent
  0x0000,
  0x0000,
  0x7300,
@@ -741,7 +745,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [38] - ampersand 
+{0x0000, // [38] - ampersand
  0x0000,
  0x0000,
  0x3C00,
@@ -759,7 +763,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [39] - quotesingle 
+{0x0000, // [39] - quotesingle
  0x0C00,
  0x0C00,
  0x0C00,
@@ -777,7 +781,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [40] - parenleft 
+{0x0000, // [40] - parenleft
  0x0000,
  0x0000,
  0x0600,
@@ -795,7 +799,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [41] - parenright 
+{0x0000, // [41] - parenright
  0x0000,
  0x0000,
  0x1800,
@@ -813,7 +817,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [42] - asterisk 
+{0x0000, // [42] - asterisk
  0x0000,
  0x0000,
  0x0000,
@@ -831,7 +835,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [43] - plus 
+{0x0000, // [43] - plus
  0x0000,
  0x0000,
  0x0000,
@@ -849,7 +853,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [44] - comma 
+{0x0000, // [44] - comma
  0x0000,
  0x0000,
  0x0000,
@@ -867,7 +871,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x1800,
  0x0000,
  0x0000},
-{0x0000, // [45] - hyphen 
+{0x0000, // [45] - hyphen
  0x0000,
  0x0000,
  0x0000,
@@ -885,7 +889,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [46] - period 
+{0x0000, // [46] - period
  0x0000,
  0x0000,
  0x0000,
@@ -903,7 +907,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [47] - slash 
+{0x0000, // [47] - slash
  0x0000,
  0x0000,
  0x0300,
@@ -921,7 +925,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [48] - zero 
+{0x0000, // [48] - zero
  0x0000,
  0x0000,
  0x3F00,
@@ -939,7 +943,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [49] - one 
+{0x0000, // [49] - one
  0x0000,
  0x0000,
  0x0C00,
@@ -957,7 +961,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [50] - two 
+{0x0000, // [50] - two
  0x0000,
  0x0000,
  0x3F00,
@@ -975,7 +979,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [51] - three 
+{0x0000, // [51] - three
  0x0000,
  0x0000,
  0x3F00,
@@ -993,7 +997,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [52] - four 
+{0x0000, // [52] - four
  0x0000,
  0x0000,
  0x0180,
@@ -1011,7 +1015,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [53] - five 
+{0x0000, // [53] - five
  0x0000,
  0x0000,
  0x7F80,
@@ -1029,7 +1033,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [54] - six 
+{0x0000, // [54] - six
  0x0000,
  0x0000,
  0x1F00,
@@ -1047,7 +1051,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [55] - seven 
+{0x0000, // [55] - seven
  0x0000,
  0x0000,
  0x7F80,
@@ -1065,7 +1069,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [56] - eight 
+{0x0000, // [56] - eight
  0x0000,
  0x0000,
  0x3F00,
@@ -1083,7 +1087,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [57] - nine 
+{0x0000, // [57] - nine
  0x0000,
  0x0000,
  0x3F00,
@@ -1101,7 +1105,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [58] - colon 
+{0x0000, // [58] - colon
  0x0000,
  0x0000,
  0x0000,
@@ -1119,7 +1123,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [59] - semicolon 
+{0x0000, // [59] - semicolon
  0x0000,
  0x0000,
  0x0000,
@@ -1137,7 +1141,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x1800,
  0x0000,
  0x0000},
-{0x0000, // [60] - less 
+{0x0000, // [60] - less
  0x0000,
  0x0000,
  0x0300,
@@ -1155,7 +1159,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [61] - equal 
+{0x0000, // [61] - equal
  0x0000,
  0x0000,
  0x0000,
@@ -1173,7 +1177,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [62] - greater 
+{0x0000, // [62] - greater
  0x0000,
  0x0000,
  0x6000,
@@ -1191,7 +1195,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [63] - question 
+{0x0000, // [63] - question
  0x0000,
  0x0000,
  0x1E00,
@@ -1209,7 +1213,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [64] - at 
+{0x0000, // [64] - at
  0x0000,
  0x0000,
  0x7F00,
@@ -1227,7 +1231,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [65] - A 
+{0x0000, // [65] - A
  0x0000,
  0x0000,
  0x3F00,
@@ -1245,7 +1249,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [66] - B 
+{0x0000, // [66] - B
  0x0000,
  0x0000,
  0x7F00,
@@ -1263,7 +1267,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [67] - C 
+{0x0000, // [67] - C
  0x0000,
  0x0000,
  0x3F00,
@@ -1281,7 +1285,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [68] - D 
+{0x0000, // [68] - D
  0x0000,
  0x0000,
  0x7E00,
@@ -1299,7 +1303,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [69] - E 
+{0x0000, // [69] - E
  0x0000,
  0x0000,
  0x7F80,
@@ -1317,7 +1321,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [70] - F 
+{0x0000, // [70] - F
  0x0000,
  0x0000,
  0x7F80,
@@ -1335,7 +1339,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [71] - G 
+{0x0000, // [71] - G
  0x0000,
  0x0000,
  0x3F00,
@@ -1353,7 +1357,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [72] - H 
+{0x0000, // [72] - H
  0x0000,
  0x0000,
  0x6180,
@@ -1371,7 +1375,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [73] - I 
+{0x0000, // [73] - I
  0x0000,
  0x0000,
  0x1E00,
@@ -1389,7 +1393,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [74] - J 
+{0x0000, // [74] - J
  0x0000,
  0x0000,
  0x0780,
@@ -1407,7 +1411,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [75] - K 
+{0x0000, // [75] - K
  0x0000,
  0x0000,
  0x6180,
@@ -1425,7 +1429,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [76] - L 
+{0x0000, // [76] - L
  0x0000,
  0x0000,
  0x6000,
@@ -1443,7 +1447,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [77] - M 
+{0x0000, // [77] - M
  0x0000,
  0x0000,
  0x8080,
@@ -1461,7 +1465,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [78] - N 
+{0x0000, // [78] - N
  0x0000,
  0x0000,
  0x6180,
@@ -1479,7 +1483,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [79] - O 
+{0x0000, // [79] - O
  0x0000,
  0x0000,
  0x3F00,
@@ -1497,7 +1501,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [80] - P 
+{0x0000, // [80] - P
  0x0000,
  0x0000,
  0x7F00,
@@ -1515,7 +1519,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [81] - Q 
+{0x0000, // [81] - Q
  0x0000,
  0x0000,
  0x3F00,
@@ -1533,7 +1537,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0300,
  0x0180,
  0x0000},
-{0x0000, // [82] - R 
+{0x0000, // [82] - R
  0x0000,
  0x0000,
  0x7F00,
@@ -1551,7 +1555,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [83] - S 
+{0x0000, // [83] - S
  0x0000,
  0x0000,
  0x3F00,
@@ -1569,7 +1573,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [84] - T 
+{0x0000, // [84] - T
  0x0000,
  0x0000,
  0x7F80,
@@ -1587,7 +1591,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [85] - U 
+{0x0000, // [85] - U
  0x0000,
  0x0000,
  0x6180,
@@ -1605,7 +1609,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [86] - V 
+{0x0000, // [86] - V
  0x0000,
  0x0000,
  0x6180,
@@ -1623,7 +1627,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [87] - W 
+{0x0000, // [87] - W
  0x0000,
  0x0000,
  0xC180,
@@ -1641,7 +1645,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [88] - X 
+{0x0000, // [88] - X
  0x0000,
  0x0000,
  0x6180,
@@ -1659,7 +1663,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [89] - Y 
+{0x0000, // [89] - Y
  0x0000,
  0x0000,
  0x6180,
@@ -1677,7 +1681,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [90] - Z 
+{0x0000, // [90] - Z
  0x0000,
  0x0000,
  0x7F80,
@@ -1695,7 +1699,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [91] - bracketleft 
+{0x0000, // [91] - bracketleft
  0x0000,
  0x0000,
  0x1E00,
@@ -1713,7 +1717,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [92] - backslash 
+{0x0000, // [92] - backslash
  0x0000,
  0x0000,
  0x6000,
@@ -1731,7 +1735,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [93] - bracketright 
+{0x0000, // [93] - bracketright
  0x0000,
  0x0000,
  0x1E00,
@@ -1749,7 +1753,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [94] - asciicircum 
+{0x0000, // [94] - asciicircum
  0x0C00,
  0x1E00,
  0x3300,
@@ -1767,7 +1771,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [95] - underscore 
+{0x0000, // [95] - underscore
  0x0000,
  0x0000,
  0x0000,
@@ -1785,7 +1789,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x7F80,
  0x0000},
-{0x1800, // [96] - grave 
+{0x1800, // [96] - grave
  0x0C00,
  0x0000,
  0x0000,
@@ -1803,7 +1807,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [97] - a 
+{0x0000, // [97] - a
  0x0000,
  0x0000,
  0x0000,
@@ -1821,7 +1825,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [98] - b 
+{0x0000, // [98] - b
  0x0000,
  0x0000,
  0x6000,
@@ -1839,7 +1843,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [99] - c 
+{0x0000, // [99] - c
  0x0000,
  0x0000,
  0x0000,
@@ -1857,7 +1861,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [100] - d 
+{0x0000, // [100] - d
  0x0000,
  0x0000,
  0x0180,
@@ -1875,7 +1879,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [101] - e 
+{0x0000, // [101] - e
  0x0000,
  0x0000,
  0x0000,
@@ -1893,7 +1897,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [102] - f 
+{0x0000, // [102] - f
  0x0000,
  0x0000,
  0x0780,
@@ -1911,7 +1915,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [103] - g 
+{0x0000, // [103] - g
  0x0000,
  0x0000,
  0x0000,
@@ -1929,7 +1933,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0180,
  0x0180,
  0x3F00},
-{0x0000, // [104] - h 
+{0x0000, // [104] - h
  0x0000,
  0x0000,
  0x6000,
@@ -1947,7 +1951,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [105] - i 
+{0x0000, // [105] - i
  0x0000,
  0x0000,
  0x0C00,
@@ -1965,7 +1969,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [106] - j 
+{0x0000, // [106] - j
  0x0000,
  0x0000,
  0x0300,
@@ -1983,7 +1987,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x3300,
  0x3300,
  0x1E00},
-{0x0000, // [107] - k 
+{0x0000, // [107] - k
  0x0000,
  0x0000,
  0x6000,
@@ -2001,7 +2005,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [108] - l 
+{0x0000, // [108] - l
  0x0000,
  0x0000,
  0x1C00,
@@ -2019,7 +2023,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [109] - m 
+{0x0000, // [109] - m
  0x0000,
  0x0000,
  0x0000,
@@ -2037,13 +2041,13 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [110] - n 
+{0x0000, // [110] - n
  0x0000,
  0x0000,
  0x0000,
  0x0000,
  0x0000,
- 0x7F00, 
+ 0x7F00,
  0x6180,
  0x6180,
  0x6180,
@@ -2055,7 +2059,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [111] - o 
+{0x0000, // [111] - o
  0x0000,
  0x0000,
  0x0000,
@@ -2073,7 +2077,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [112] - p 
+{0x0000, // [112] - p
  0x0000,
  0x0000,
  0x0000,
@@ -2091,7 +2095,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x6000,
  0x6000,
  0x6000},
-{0x0000, // [113] - q 
+{0x0000, // [113] - q
  0x0000,
  0x0000,
  0x0000,
@@ -2109,7 +2113,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0180,
  0x0180,
  0x0180},
-{0x0000, // [114] - r 
+{0x0000, // [114] - r
  0x0000,
  0x0000,
  0x0000,
@@ -2127,7 +2131,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [115] - s 
+{0x0000, // [115] - s
  0x0000,
  0x0000,
  0x0000,
@@ -2145,7 +2149,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [116] - t 
+{0x0000, // [116] - t
  0x0000,
  0x0000,
  0x1800,
@@ -2163,7 +2167,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [117] - u 
+{0x0000, // [117] - u
  0x0000,
  0x0000,
  0x0000,
@@ -2181,7 +2185,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [118] - v 
+{0x0000, // [118] - v
  0x0000,
  0x0000,
  0x0000,
@@ -2199,7 +2203,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [119] - w 
+{0x0000, // [119] - w
  0x0000,
  0x0000,
  0x0000,
@@ -2217,7 +2221,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [120] - x 
+{0x0000, // [120] - x
  0x0000,
  0x0000,
  0x0000,
@@ -2235,7 +2239,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [121] - y 
+{0x0000, // [121] - y
  0x0000,
  0x0000,
  0x0000,
@@ -2253,7 +2257,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0180,
  0x0180,
  0x3F00},
-{0x0000, // [122] - z 
+{0x0000, // [122] - z
  0x0000,
  0x0000,
  0x0000,
@@ -2271,7 +2275,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [123] - braceleft 
+{0x0000, // [123] - braceleft
  0x0000,
  0x0000,
  0x0700,
@@ -2289,7 +2293,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [124] - bar 
+{0x0000, // [124] - bar
  0x0000,
  0x0000,
  0x0C00,
@@ -2307,7 +2311,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [125] - braceright 
+{0x0000, // [125] - braceright
  0x0000,
  0x0000,
  0x3800,
@@ -2325,7 +2329,7 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
  0x0000,
  0x0000,
  0x0000},
-{0x0000, // [126] - asciitilde 
+{0x0000, // [126] - asciitilde
  0x3980,
  0x6D80,
  0x6D80,
@@ -2347,4 +2351,3 @@ const unsigned short font[127][18] PROGMEM = { // each char is 10 wide
 
 
 #endif
-

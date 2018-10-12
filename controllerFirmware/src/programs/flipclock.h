@@ -33,7 +33,7 @@ class FlipClock : public ScreenProgram {
         dateTime = NTP->getNTPtime(1.0, 1);
       } while(dateTime.valid == false);
       syncTime = millis();
-      Serial.println("Synchronized clock");  
+      Serial.println("Synchronized clock");
       NTP->printDateTime(dateTime);
       srand(dateTime.unixtime);
     }
@@ -50,6 +50,7 @@ class FlipClock : public ScreenProgram {
         syncTime+=1000;
         dateTime.unixtime++;
         NTP->updateTimestamp(&dateTime);
+        Serial.println("Tick!");
       }
     }
 };

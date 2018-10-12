@@ -7,32 +7,82 @@ int FlipScreen::index_to_bitpattern(int index) {
 void FlipScreen::_digitalWrite(unsigned char pin, unsigned char state) {
   if(this->gpiostate[pin] == state) return;
   this->gpiostate[pin] = state;
-  digitalWrite(pin, state);
+  // digitalWrite(pin, state);
+  if(pin < 8) {
+    // A
+    PORTA_EXTENDER ^= 1 << pin;
+    Wire.beginTransmission(0x27);
+    Wire.write(0x0A);
+    Wire.write(PORTA_EXTENDER);
+    if(Wire.endTransmission() != 0) {
+      Serial.println("Error!");
+    }
+  } else {
+    // B
+    PORTB_EXTENDER ^= 1 << (pin - 8);
+    Wire.beginTransmission(0x27);
+    Wire.write(0x1A);
+    Wire.write(PORTB_EXTENDER);
+    if(Wire.endTransmission() != 0) {
+      Serial.println("Error!");
+    }
+  }
 }
 
 FlipScreen::FlipScreen() {
+  int i = 0;
+  Wire.setClock(100000);
+  do {
+    i = 0;
+    Wire.begin();
+    Wire.beginTransmission(0x27); // Reconfigure all pins as outputs
+    Wire.write(0x00); // Set pointer
+    Wire.write(0x00); // 0x00 to 00000000
+    Wire.write(0x00); // 0x01 to 00000000
+    i += Wire.endTransmission();
+
+    Wire.beginTransmission(0x27); // Enable WEAK (0.4mA) pull-up. Should be enough though
+    Wire.write(0x06); // Set pointer
+    Wire.write(0xFF); //
+    i += Wire.endTransmission();
+
+    Wire.beginTransmission(0x27); // Enable pull-up for bank 2
+    Wire.write(0x16); // Set pointer
+    Wire.write(0xFF); //
+    i += Wire.endTransmission();
+    Serial.println(i);
+  } while(i != 0);
+
+  i = 0;
+  char str[256];
+  while(true) {
+    clear(true);
+    clear(false);
+  }
+
   // fill fast index-map
   for(int i = 0; i < 28; i++) {
     index_to_bitpattern_map[i] = index_to_bitpattern(i);
   }
-  
+
   // reset lookup tables
   for(int i = 0; i < 40; i++) {
-    this->gpiostate[i] = 0xFF;
+    this->gpiostate[i] = 0x00;
   }
 
+  // All pins in extender are set to output by default
   // set control pins to output
-  pinMode(this->color_pin, OUTPUT);
-  for(int i = 0; i < 4; i++) {
-    pinMode(this->panel_triggers[i], OUTPUT);
-  }
-  for(int i = 0; i < 5; i++) {
-    pinMode(this->row_addr_pins[i], OUTPUT);
-    pinMode(this->col_addr_pins[i], OUTPUT);
-  }
+  // pinMode(this->color_pin, OUTPUT);
+  // for(int i = 0; i < 4; i++) {
+  //   pinMode(this->panel_triggers[i], OUTPUT);
+  // }
+  // for(int i = 0; i < 5; i++) {
+  //   pinMode(this->row_addr_pins[i], OUTPUT);
+  //   pinMode(this->col_addr_pins[i], OUTPUT);
+  // }
 
-  pinMode(backlight_pin, OUTPUT);
-  digitalWrite(backlight_pin, backlight_state);
+  // pinMode(backlight_pin, OUTPUT);
+  _digitalWrite(backlight_pin, backlight_state);
 
   // clear the screen
   for(int x = 0; x < PANEL_WIDTH; x++) {
@@ -69,7 +119,7 @@ void FlipScreen::_setDot(unsigned int x, unsigned int y, unsigned char color) {
   _digitalWrite(this->color_pin, color);
 
   _digitalWrite(this->panel_triggers[panel], HIGH);
-  delayMicroseconds(350); 
+  delayMicroseconds(500);
   _digitalWrite(this->panel_triggers[panel], LOW);
   delayMicroseconds(10);
 }
@@ -105,9 +155,9 @@ void FlipScreen::write(const char* str, unsigned char inverted) {
   int strlen = 0;
   unsigned int index = 0;
   while(str[strlen] != '\0') strlen++;
-  
+
   int x = -1 + PANEL_WIDTH/2 - (strlen*10/2);
-  
+
   char c;
   while((c = str[index++]) != '\0') {
     this->putChar(x, 0, c, inverted);

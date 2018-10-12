@@ -22,7 +22,7 @@ class FlipSnake : public ScreenProgram {
     FlipSnake(FlipScreen* _sign) : ScreenProgram(_sign) {
 	    lastUpdate = 0;
 	    running = true;
-	   	
+
 	   	pos = (PANEL_WIDTH/2) << 8 | (PANEL_HEIGHT/2);
 	    for(int i = 0; i < length; i++) {
 	    	body[i] = pos;
