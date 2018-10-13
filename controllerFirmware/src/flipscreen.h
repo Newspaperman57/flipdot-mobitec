@@ -32,7 +32,7 @@ class FlipScreen {
     // const unsigned char panel_triggers[4] = {1,13,0,14};
     // const unsigned char row_addr_pins[5] =  {7,6,8,9,5};
     // const unsigned char col_addr_pins[5] =  {4,10,3,11,2};
-    // const unsigned char color_pin = 10;
+    // const unsigned char color_pin = 12;
     const unsigned char panel_triggers[4] = {6,9,7,8};
     const unsigned char row_addr_pins[5] =  {0,1,14,13,2};
     const unsigned char col_addr_pins[5] =  {3,12,4,11,5};

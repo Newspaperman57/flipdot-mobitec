@@ -112,7 +112,7 @@ void FlipScreen::_setDot(unsigned int x, unsigned int y, unsigned char color) {
   _digitalWrite(this->color_pin, color);
 
   _digitalWrite(this->panel_triggers[panel], HIGH);
-  delayMicroseconds(500);
+  delayMicroseconds(350);
   _digitalWrite(this->panel_triggers[panel], LOW);
   delayMicroseconds(10);
 }

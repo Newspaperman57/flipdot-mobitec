@@ -2,7 +2,7 @@
 import socket
 import getch
 
-UDP_IP = socket.gethostbyname("flipdot.local")
+UDP_IP = socket.gethostbyname("flipdot1.local")
 UDP_PORT = 12345
 
 def command(msg):
@@ -17,7 +17,7 @@ def main():
             k = getch.getch()
             if k != '':
                 break
-        # print(k)        
+        # print(k)
         if k == 'Q':
             running = False
         if k =='\x1b' and getch.getch() == '[':

@@ -35,7 +35,7 @@ BluetoothSerial bt;
 
 void startWiFiServices() {
   if(WiFi.status() == WL_CONNECTED) {
-    if (!MDNS.begin("flipdot")) {
+    if (!MDNS.begin("flipdot1")) {
         Serial.println("Error setting up MDNS responder!");
     }
     MDNS.addService("ctrl", "udp", 12345);
