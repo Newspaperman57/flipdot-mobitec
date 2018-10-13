@@ -11,6 +11,7 @@
 #include "programs/flipclock.h"
 #include "programs/flipsilent.h"
 #include "programs/fliptetris.h"
+#include "programs/flipreset.h"
 #include "programs/flipsnake.h"
 #include "programs/flipsettingbacklight.h"
 
@@ -87,6 +88,7 @@ void setup() {
   std::map<std::string, ScreenProgram*> menu;
   menu[std::string("Silent")]     = new FlipSilent(sign);
   menu[std::string("Clock")]      = new FlipClock(sign);
+  menu[std::string("Reset")]      = new FlipReset(sign);
   menu[std::string("Tetris")]     = new FlipTetris(sign);
   menu[std::string("Snake")]      = new FlipSnake(sign);
   menu[std::string("Backlight")]  = new FlipSettingBacklight(sign);
@@ -95,7 +97,7 @@ void setup() {
   sign->write("READY");sign->flip();
   sign->clear(BLACK);
   screenManager->push(new FlipMenu(sign, menu));
-  ((FlipMenu*)(screenManager->peek()))->setProgram("Clock");
+  ((FlipMenu*)(screenManager->peek()))->setProgram("Reset");
 }
 
 void loop() {

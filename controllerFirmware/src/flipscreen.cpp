@@ -53,13 +53,6 @@ FlipScreen::FlipScreen() {
     Serial.println(i);
   } while(i != 0);
 
-  i = 0;
-  char str[256];
-  while(true) {
-    clear(true);
-    clear(false);
-  }
-
   // fill fast index-map
   for(int i = 0; i < 28; i++) {
     index_to_bitpattern_map[i] = index_to_bitpattern(i);
