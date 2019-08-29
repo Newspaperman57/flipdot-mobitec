@@ -8,23 +8,46 @@ void FlipScreen::_digitalWrite(unsigned char pin, unsigned char state) {
   if(this->gpiostate[pin] == state) return;
   this->gpiostate[pin] = state;
   // digitalWrite(pin, state);
+  int i;
+  do {
+    i = 0;
+    Wire.begin();
+    Wire.beginTransmission(0x27); // Reconfigure all pins as outputs
+    Wire.write(0x00); // Set pointer
+    Wire.write(0x00); // 0x00 to 00000000
+    Wire.write(0x00); // 0x01 to 00000000
+    i += Wire.endTransmission();
+
+    Wire.beginTransmission(0x27); // Reconfigure all pins as outputs
+    Wire.write(0x0C); // Set pointer
+    Wire.write(0xFF); // 0x0C to 11111111
+    Wire.write(0xFF); // 0x0D to 11111111
+    i += Wire.endTransmission();
+
+    Serial.printf("I2C endtrans: ");
+    Serial.println(i);
+  } while(i != 0);
+
+  unsigned int error = 0;
   if(pin < 8) {
     // A
     PORTA_EXTENDER ^= 1 << pin;
     Wire.beginTransmission(0x27);
-    Wire.write(0x0A);
+    Wire.write(0x14);
     Wire.write(PORTA_EXTENDER);
-    if(Wire.endTransmission() != 0) {
-      Serial.println("Error!");
+    if((error = Wire.endTransmission()) != 0) {
+      Serial.printf("Error: ");
+      Serial.println(error);
     }
   } else {
     // B
     PORTB_EXTENDER ^= 1 << (pin - 8);
     Wire.beginTransmission(0x27);
-    Wire.write(0x1A);
+    Wire.write(0x15);
     Wire.write(PORTB_EXTENDER);
-    if(Wire.endTransmission() != 0) {
-      Serial.println("Error!");
+    if((error = Wire.endTransmission()) != 0) {
+      Serial.printf("Error: ");
+      Serial.println(error);
     }
   }
 }
@@ -41,17 +64,16 @@ FlipScreen::FlipScreen() {
     Wire.write(0x00); // 0x01 to 00000000
     i += Wire.endTransmission();
 
-    Wire.beginTransmission(0x27); // Enable WEAK (0.4mA) pull-up. Should be enough though
-    Wire.write(0x06); // Set pointer
-    Wire.write(0xFF); //
+    Wire.beginTransmission(0x27); // Reconfigure all pins as outputs
+    Wire.write(0x0C); // Set pointer
+    Wire.write(0xFF); // 0x0C to 11111111
+    Wire.write(0xFF); // 0x0D to 11111111
     i += Wire.endTransmission();
 
-    Wire.beginTransmission(0x27); // Enable pull-up for bank 2
-    Wire.write(0x16); // Set pointer
-    Wire.write(0xFF); //
-    i += Wire.endTransmission();
+    Serial.printf("I2C endtrans: ");
     Serial.println(i);
   } while(i != 0);
+  Serial.printf("Setup I2C\n");
 
   // fill fast index-map
   for(int i = 0; i < 28; i++) {

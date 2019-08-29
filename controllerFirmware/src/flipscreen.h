@@ -16,7 +16,7 @@
 #define OFF false
 
 #define PANEL_WIDTH 112
-#define PANEL_HEIGHT 20
+#define PANEL_HEIGHT 16
 // Yellow config
 // #define PANEL_WIDTH 112
 // #define PANEL_HEIGHT 16

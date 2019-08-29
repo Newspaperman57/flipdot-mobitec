@@ -8,7 +8,7 @@ UDP_PORT = 12345
 def command(msg):
     sock = socket.socket(socket.AF_INET, # Internet
                          socket.SOCK_DGRAM) # UDP
-    sock.sendto(msg.encode(), (UDP_IP, UDP_PORT))
+    sock.sendto(msg, (UDP_IP, UDP_PORT))
 
 def main():
     running = True
@@ -23,9 +23,9 @@ def main():
         if k =='\x1b' and getch.getch() == '[':
             k = getch.getch()
             if k == 'A':
-                command("up")
+                command(b'\x10\x10\xFF')
             elif k =='B':
-                command("down")
+                command(b'\x10\x10\x00')
             elif k=='C':
                 command("right")
             elif k=='D':

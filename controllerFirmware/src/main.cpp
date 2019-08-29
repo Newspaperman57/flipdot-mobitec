@@ -11,6 +11,7 @@
 #include "programs/flipclock.h"
 #include "programs/flipsilent.h"
 #include "programs/fliptetris.h"
+#include "programs/fliptetrisAI.h"
 #include "programs/flipreset.h"
 #include "programs/flipsnake.h"
 #include "programs/flipsettingbacklight.h"
@@ -69,7 +70,7 @@ void setupWifi() {
       delay(500);
       Serial.print(".");
   }
-
+  Serial.print("Connected to wifi");
   startWiFiServices();
 }
 
@@ -80,66 +81,39 @@ void setup() {
   // instantiate the sign api
   sign = new FlipScreen();
   sign->clear(BLACK);
-
-  // retrieve the screenManager instance
-  screenManager = ScreenProgramManager::getInstance();
-
-  // Create the menu
-  std::map<std::string, ScreenProgram*> menu;
-  menu[std::string("Silent")]     = new FlipSilent(sign);
-  menu[std::string("Clock")]      = new FlipClock(sign);
-  menu[std::string("Reset")]      = new FlipReset(sign);
-  menu[std::string("Tetris")]     = new FlipTetris(sign);
-  menu[std::string("Snake")]      = new FlipSnake(sign);
-  menu[std::string("Backlight")]  = new FlipSettingBacklight(sign);
-
-
-  sign->write("READY");sign->flip();
-  sign->clear(BLACK);
-  screenManager->push(new FlipMenu(sign, menu));
-  ((FlipMenu*)(screenManager->peek()))->setProgram("Reset");
+  sign->flip();
+  // // retrieve the screenManager instance
+  // screenManager = ScreenProgramManager::getInstance();
+  //
+  // // Create the menu
+  // std::map<std::string, ScreenProgram*> menu;
+  // menu[std::string("Silent")]     = new FlipSilent(sign);
+  // menu[std::string("Clock")]      = new FlipClock(sign);
+  // // menu[std::string("Reset")]      = new FlipReset(sign);
+  // menu[std::string("Tetris")]     = new FlipTetris(sign);
+  // menu[std::string("TetrisAI")]   = new FlipTetrisAI(sign);
+  // menu[std::string("Snake")]      = new FlipSnake(sign);
+  // // menu[std::string("Backlight")]  = new FlipSettingBacklight(sign);
+  //
+  // sign->write("READY");sign->flip();
+  // sign->clear(BLACK);
+  // // screenManager->push(new FlipMenu(sign, menu));
+  // ((FlipMenu*)(screenManager->peek()))->setProgram("Silent");
 }
 
+char s = true;
 void loop() {
-  char* input = NULL;
-  {
-    wl_status_t status = WiFi.status();
-    if(status != WL_CONNECTED &&
-       status != WL_IDLE_STATUS) {
-
-      /*wait until ESP32 connect to WiFi*/
-      sign->clear(BLACK);
-      sign->write("Connecting...");
-      sign->flip();
-
-      int retries = WIFI_RETRY_COUNT;
-      while ((status = WiFi.status()) != WL_CONNECTED && retries-- > 0) {
-        Serial.println(status);
-          delay(500);
-          Serial.print(".");
-      }
-
-      // if still not connected
-      if(status != WL_CONNECTED &&
-         status != WL_IDLE_STATUS) {
-        configureWiFi();
-      }
-
-      stopWiFiServices();
-      configureWiFi();
-    }
-  }
-
-  static char packetBuffer[256];
-  int packetSize = udp.parsePacket();
-  if (packetSize) {
-    int len = udp.read(packetBuffer, 255);
+  // Serial.printf("Loop!");
+  static unsigned char packetBuffer[5];
+  while (udp.parsePacket()) {
+    Serial.printf("Packet!");
+    int len = udp.read(packetBuffer, 5);
     if (len > 0) {
-      packetBuffer[len] = '\0';
-      Serial.println(packetBuffer);
-      input = packetBuffer;
+      // unsigned int x = (packetBuffer[0] << 8) + packetBuffer[1];
+      // unsigned int y = (packetBuffer[2] << 8) + packetBuffer[3];
+      // unsigned char c = packetBuffer[4];
+      sign->_setDot(10, 10, s);
+      s = !s;
     }
   }
-
-  screenManager->loop(input);
 }
